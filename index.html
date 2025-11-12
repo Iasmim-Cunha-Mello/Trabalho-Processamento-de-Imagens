@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Teste /tipoimagem</title>
+  <style>
+    body { font-family: Inter, Roboto, Arial; max-width: 760px; margin: 32px auto; padding: 16px; color:#222; }
+    .card { padding:16px; border:1px solid #e3e3e3; border-radius:8px; box-shadow: 0 6px 18px rgba(0,0,0,0.04); }
+    input[type="file"] { display:block; margin-bottom:12px; }
+    button { padding:8px 12px; border-radius:6px; border:0; background:#2563eb; color:white; cursor:pointer; }
+    pre { background:#f7fafc; padding:12px; border-radius:6px; overflow:auto; }
+    img.preview { max-width:100%; max-height:300px; display:block; margin:8px 0; border-radius:6px; }
+    .hint { font-size:13px; color:#666; margin-top:8px; }
+  </style>
+</head>
+<body>
+  <h1>Teste: POST /tipoimagem</h1>
+
+  <div class="card">
+    <label for="apiUrl">API URL</label>
+    <input id="apiUrl" type="text" value="http://localhost:8000/tipoimagem" style="width:100%; margin-bottom:12px;" />
+
+    <form id="uploadForm">
+      <input id="fileInput" name="file" type="file" accept="image/*" required />
+      <img id="preview" class="preview" style="display:none" alt="preview da imagem" />
+      <div>
+        <button type="submit">Enviar para /tipoimagem</button>
+      </div>
+    </form>
+
+    <p class="hint">A resposta será exibida abaixo. Se a requisição falhar por CORS, veja instruções rápidas no fim desta página.</p>
+
+    <h3>Resposta</h3>
+    <pre id="output">Nenhuma requisição enviada ainda.</pre>
+  </div>
+
+  <script>
+    const form = document.getElementById('uploadForm');
+    const fileInput = document.getElementById('fileInput');
+    const output = document.getElementById('output');
+    const apiUrlInput = document.getElementById('apiUrl');
+    const preview = document.getElementById('preview');
+
+    fileInput.addEventListener('change', () => {
+      const f = fileInput.files && fileInput.files[0];
+      if (!f) {
+        preview.style.display = 'none';
+        preview.src = '';
+        return;
+      }
+      const url = URL.createObjectURL(f);
+      preview.src = url;
+      preview.style.display = 'block';
+    });
+
+    form.addEventListener('submit', async (ev) => {
+      ev.preventDefault();
+      const apiUrl = apiUrlInput.value.trim();
+      if (!apiUrl) {
+        alert('Preencha a URL da API.');
+        return;
+      }
+      const file = fileInput.files && fileInput.files[0];
+      if (!file) {
+        alert('Escolha um arquivo de imagem.');
+        return;
+      }
+
+      output.textContent = 'Enviando...';
+
+      try {
+        const fd = new FormData();
+        fd.append('file', file, file.name);
+
+        const resp = await fetch(apiUrl, {
+          method: 'POST',
+          body: fd,
+          // não colocar headers 'Content-Type' — o browser define o boundary automaticamente
+        });
+
+        const text = await resp.text(); // tentamos texto primeiro para exibir erro bruto se houver
+        let parsed = text;
+        try {
+          parsed = JSON.stringify(JSON.parse(text), null, 2);
+        } catch (e) {
+          // não é JSON, exibe o texto cru
+        }
+
+        if (!resp.ok) {
+          output.textContent = `Erro HTTP ${resp.status}:\n\n${parsed}`;
+        } else {
+          output.textContent = parsed;
+        }
+      } catch (err) {
+        output.textContent = 'Falha ao conectar: ' + err.message;
+      }
+    });
+  </script>
+</body>
+</html>

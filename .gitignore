@@ -1,0 +1,18 @@
+# 🐍 Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+*.log
+
+# 📦 Ambientes virtuais
+venv/
+.env
+.env.*
+
+# 🧠 Arquivos temporários e locais
+*.swp
+*.swo
+*.bak
+*.tmp
